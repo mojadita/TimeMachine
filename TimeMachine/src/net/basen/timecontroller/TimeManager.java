@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -37,7 +38,7 @@ import javax.swing.JScrollPane;
 
 public class TimeManager extends JFrame implements WindowListener {
 
-    private static final String version = "TimeManager v1.1";
+    private static final String version = "TimeManager v1.2";
     private static final long serialVersionUID = -4888907548573283461L;
     private static final File f = new File(System.getProperty( "user.home" ), ".timemanager");
 
@@ -96,12 +97,9 @@ public class TimeManager extends JFrame implements WindowListener {
         public void actionPerformed( ActionEvent e ) {
             for (int i = 0; i < listModel.getSize(); i++) {
                 if (list.isSelectedIndex( i )) {
-                    Task t = listModel.getElementAt( i );
-                    t.accum = 0;
-                    t.lapFrom = e.getWhen();
+                    listModel.getElementAt( i ).reset( e.getWhen() );
                 }
             }
-            
         }
     };
 
@@ -116,6 +114,7 @@ public class TimeManager extends JFrame implements WindowListener {
                 System.out.println("" + e.getWhen() + ": Total " + n);
             }
             save();
+            System.out.println("" + e.getWhen() + ": END " + new Date(e.getWhen()));
             System.exit(0);
         }
     };
@@ -217,6 +216,13 @@ public class TimeManager extends JFrame implements WindowListener {
                 updatingTask.lapFrom = ts;
                 listModel.update( this );
                 System.out.println( "" + ts + ": Beginning " + this );
+            }
+        }
+        
+        public void reset(long ts) {
+            synchronized (TimeManager.this) {
+                accum = 0;
+                lapFrom = ts;
             }
         }
         
@@ -341,6 +347,9 @@ public class TimeManager extends JFrame implements WindowListener {
         tm.setDefaultCloseOperation( EXIT_ON_CLOSE );
         tm.pack();
         tm.setVisible( true );
+        long starttime = System.currentTimeMillis();
+        
+        System.out.println( "" + starttime + ": BEGIN " + new Date(starttime) );
         
         try {
             while (true) {
