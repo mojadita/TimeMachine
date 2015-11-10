@@ -38,21 +38,39 @@ import javax.swing.JScrollPane;
 
 public class TimeManager extends JFrame implements WindowListener {
 
-    private static final String version = "TimeManager v1.2";
-    private static final long serialVersionUID = -4888907548573283461L;
-    private static final File f = new File(System.getProperty( "user.home" ), ".timemanager");
+    private static final long   serialVersionUID = 
+            -4888907548573283461L;
+    private static final String version = "TimeManager v1.3";
+    private static final File   f = new File(
+            System.getProperty( "user.home" ), 
+            ".timemanager.properties");
+    private static final String CREATE  = ": CREATE ";
+    private static final String TOTAL   = ": TOTAL  ";
+    private static final String END     = ": END    ";
+    private static final String START   = ": START  ";
+    private static final String STOP    = ": STOP   ";
+    private static final String RESET   = ": RESET  ";
+    private static final String DELETE  = ": DELETE ";
+    private static final String BEGIN   = ": BEGIN  ";
 
     Task                    updatingTask;
-    Map<String, Task>       tasks           = new TreeMap<String, Task>();
+    Map<String, Task>       tasksMap = 
+            new TreeMap<String, Task>();
     JMenu                   menuSelect;
     JMenu                   menuDelete;
     JList<Task>             list;
-    TaskListModel           listModel       = new TaskListModel();
+    TaskListModel           listModel = 
+            new TaskListModel();
     JLabel                  totalTime;
     JCheckBoxMenuItem       alwaysOnTop;
-            
-    private final Action toggleAlwaysOnTop = new AbstractAction( "Always on top" ) {
-        private static final long serialVersionUID = 1167217382426314444L;
+    
+    /*******************************************************************
+     * NOW, THE ACTIONS:
+     */
+    private final Action toggleAlwaysOnTop = 
+            new AbstractAction( "Always on top" ) {
+        private static final long serialVersionUID = 
+                1167217382426314444L;
         @Override
         public void actionPerformed( ActionEvent e ) {
             boolean value = alwaysOnTop.getState();
@@ -60,68 +78,93 @@ public class TimeManager extends JFrame implements WindowListener {
         }
     };
 
-    private final Action addAction = new AbstractAction( "Add new task..." ) {
-        private static final long serialVersionUID = -3170654095467188869L;
+    private final Action addNewTask = 
+            new AbstractAction( "Add new task..." ) {
+        private static final long serialVersionUID = 
+                -3170654095467188869L;
         @Override
         public void actionPerformed( ActionEvent e ) {
-            String name = JOptionPane.showInputDialog( TimeManager.this, "Enter name of task:" );
-            if (name != null && tasks.get( name ) == null) {
-                Task t = new Task(name);
-                tasks.put( name, t );
+            String name = JOptionPane.showInputDialog( 
+                    TimeManager.this, 
+                    "Enter name of task:", 
+                    "Task #" + e.getWhen() );
+            if ( name != null && tasksMap.get( name ) == null ) {
+                newTask( name, e.getWhen() );
             }
         }
     };
     
-    private final Action resetSelected = new AbstractAction( "Reset seleted" ) {
-        private static final long serialVersionUID = 8344533774239738481L;
+    private final Action resetSelected = 
+            new AbstractAction( "Reset seleted" ) 
+    {
+        private static final long serialVersionUID = 
+                8344533774239738481L;
         @Override
         public void actionPerformed( ActionEvent e ) {
-            for (int i = 0; i < listModel.getSize(); i++) {
-                if (list.isSelectedIndex( i )) {
-                    Task t = listModel.getElementAt( i );
-                    t.accum = 0;
-                    t.lapFrom = e.getWhen();
+            int ok = JOptionPane.showConfirmDialog(
+                    TimeManager.this, "Are you sure?");
+            switch (ok) {
+            case JOptionPane.YES_OPTION:
+                for (int i = 0; i < listModel.getSize(); i++) {
+                    if (list.isSelectedIndex( i )) {
+                        Task t = listModel.getElementAt( i );
+                        t.reset(e.getWhen());
+                        listModel.update(t);
+                    }
                 }
             }
             
         }
     };
 
-    /* TODO: This method has been just copied from resetSelected(), and it must be
-     * rewritten to delete all selected Tasks.
-     */
-    @SuppressWarnings( "unused" )
-    private final Action deleteSelected = new AbstractAction( "Delete seleted" ) {
-        private static final long serialVersionUID = -6555684243738386825L;
+    private final Action deleteSelected = 
+            new AbstractAction( "Delete seleted" ) 
+    {
+        private static final long serialVersionUID = 
+                -6555684243738386825L;
         @Override
         public void actionPerformed( ActionEvent e ) {
-            for (int i = 0; i < listModel.getSize(); i++) {
-                if (list.isSelectedIndex( i )) {
-                    listModel.getElementAt( i ).reset( e.getWhen() );
+            int ok = JOptionPane.showConfirmDialog(
+                    TimeManager.this, "Are you sure?");
+            switch (ok) {
+            case JOptionPane.YES_OPTION:
+                for (int i = 0; i < listModel.getSize(); i++) {
+                    if (list.isSelectedIndex( i )) {
+                        Task t = listModel.getElementAt(i);
+                        if (updatingTask == t) 
+                            t.stop(e.getWhen());
+                        t.delete(e.getWhen());
+                        i--;
+                    }
                 }
             }
         }
     };
 
-    private final Action quitAction = new AbstractAction("Quit"){
-        private static final long serialVersionUID = 300324797016514635L;
+    private final Action quitAction = 
+            new AbstractAction("Quit")
+    {
+        private static final long serialVersionUID = 
+                300324797016514635L;
         @Override
         public void actionPerformed( ActionEvent e ) {
             if (updatingTask != null) {
-                updatingTask.finish( e.getWhen() );
+                updatingTask.stop( e.getWhen() );
             }
-            for (Task n: tasks.values()) {
-                System.out.println("" + e.getWhen() + ": Total " + n);
+            for (Task n: tasksMap.values()) {
+                System.out.println("" + e.getWhen() + TOTAL + n);
             }
             save();
-            System.out.println("" + e.getWhen() + ": END " + new Date(e.getWhen()));
+            System.out.println("" + e.getWhen() + 
+                    END + new Date(e.getWhen()));
             System.exit(0);
         }
     };
 
     private class TaskListModel extends AbstractListModel<Task> {
         
-        private static final long serialVersionUID = 2354503374712648030L;
+        private static final long serialVersionUID = 
+                2354503374712648030L;
         ArrayList<Task> values = new ArrayList<Task> ();
 
         @Override
@@ -154,7 +197,8 @@ public class TimeManager extends JFrame implements WindowListener {
 
     public class Task implements Serializable {
 
-        private static final long serialVersionUID = 6941666755400993443L;
+        private static final long serialVersionUID = 
+                6941666755400993443L;
         private String          name;
         private long            accum = 0, 
                                 lapFrom;
@@ -162,26 +206,26 @@ public class TimeManager extends JFrame implements WindowListener {
         private JMenuItem       menuItemDelete;
         private AbstractAction  select;
         private AbstractAction  delete;
+        
+        public Task( final String name, long ts) {
+            this( name, ts, 0 );
+        }
 
-        public Task( String name ) {
+        public Task( final String name, long ts, long accum ) {
             this.name = name;
-            select = new AbstractAction(name) {
+            this.select = new AbstractAction(name) {
                 private static final long serialVersionUID =
                         -9041317284352500581L;
-
                 @Override
                 public void actionPerformed( ActionEvent e ) {
-                    if (updatingTask != null) {
-                        updatingTask.finish( e.getWhen() );
-                    }
+                    if (updatingTask != null)
+                        updatingTask.stop( e.getWhen() );
                     start( e.getWhen() );
                 }
             };
-            delete = new AbstractAction(name) {
-
+            this.delete = new AbstractAction(name) {
                 private static final long serialVersionUID =
                         -1845149367713429875L;
-
                 @Override
                 public void actionPerformed( ActionEvent e ) {
                     if (updatingTask == Task.this) {
@@ -190,18 +234,32 @@ public class TimeManager extends JFrame implements WindowListener {
                     menuDelete.remove( menuItemDelete );
                     menuSelect.remove( menuItemSelect );
                     listModel.remove( Task.this );
-                    tasks.remove( name );
+                    tasksMap.remove( name );
                 }
             };
-            menuSelect.add( menuItemSelect = new JMenuItem( this.select ) );
-            menuDelete.add( menuItemDelete = new JMenuItem( this.delete ) );
-            tasks.put( name, this );                
-            listModel.add(this);
+            this.accum = accum;
+            menuSelect.add( menuItemSelect = 
+                    new JMenuItem( this.select ) );
+            menuDelete.add( menuItemDelete = 
+                    new JMenuItem( this.delete ) );
+            tasksMap.put( name, this );                
+            listModel.add( this );
+            System.out.println( "" + ts + CREATE + this );
         }
         
-        public void finish(long ts) {
-            synchronized (TimeManager.this) {
-                System.out.println( "" + ts + ": Finishing " + this );
+        public void start( long ts ) {
+            synchronized ( TimeManager.this ) {
+                updatingTask = this;
+                select.setEnabled( false );
+                updatingTask.lapFrom = ts;
+                listModel.update( this );
+                System.out.println( "" + ts + START + this );
+            }
+        }
+        
+        public void stop( long ts ) {
+            synchronized ( TimeManager.this ) {
+                System.out.println( "" + ts + STOP + this );
                 updatingTask.accum += ts - updatingTask.lapFrom;
                 updatingTask.select.setEnabled( true );
                 listModel.update( this );
@@ -209,20 +267,21 @@ public class TimeManager extends JFrame implements WindowListener {
             }
         }
         
-        public void start(long ts) {
-            synchronized (TimeManager.this) {
-                updatingTask = this;
-                select.setEnabled( false );
-                updatingTask.lapFrom = ts;
-                listModel.update( this );
-                System.out.println( "" + ts + ": Beginning " + this );
+        public void reset( long ts ) {
+            synchronized ( TimeManager.this ) {
+                System.out.println( "" + ts + RESET + this );
+                accum = 0;
+                lapFrom = ts;
             }
         }
         
-        public void reset(long ts) {
-            synchronized (TimeManager.this) {
-                accum = 0;
-                lapFrom = ts;
+        public void delete( long ts ) {
+            synchronized ( TimeManager.this ) {
+                tasksMap.remove( getName() );
+                menuSelect.remove( menuItemSelect );
+                menuDelete.remove( menuItemDelete );
+                listModel.remove( this ); 
+                System.out.println( "" + ts + DELETE + this );
             }
         }
         
@@ -241,21 +300,21 @@ public class TimeManager extends JFrame implements WindowListener {
         
         @Override
         public String toString() {
-            return String.format("[%s]:%s", TimeUnits.msecToString(getValue()), name);
+            return String.format("[%s]:%s", 
+                    TimeUnits.msecToString(getValue()), name);
         }
     }
 
-    public Task newTask(String name) {
-        Task result = tasks.get( name );
-        if (result == null) {
-            result = new Task(name);
+    public Task newTask( String name, long ts ) {
+        Task res = tasksMap.get( name );
+        if ( res == null ) {
+            res = new Task( name, ts );
         }
-        return result;
+        return res;
     }
     
-    public Task newTask(String name, long ini) {
-        Task result = newTask(name);
-        result.accum = ini;
+    public Task newTask( String name, long ts, long ini ) {
+        Task result = new Task( name, ts, ini );
         return result;
     }
     
@@ -263,55 +322,65 @@ public class TimeManager extends JFrame implements WindowListener {
         if (updatingTask != null) {
             listModel.update( updatingTask );
         }
+        
         long total = 0;
         for (int i = 0; i < listModel.getSize(); i++) {
             if (list.isSelectedIndex( i )) {
                 total += listModel.getElementAt( i ).getValue();
             }
         }
-        totalTime.setText( String.format( "TOTAL: %s", TimeUnits.msecToString( total ) ) );
-        setTitle( version + " - " + TimeUnits.msecToString( total ) );
+        totalTime.setText( String.format( "TOTAL: %s", 
+                TimeUnits.msecToString( total ) ) );
+        setTitle( version + " - " + 
+                TimeUnits.msecToString( total ) );
     }
 
-    public TimeManager( String title ) {
+    public TimeManager( String title, long ts ) {
         JMenuBar menu; 
         JMenu file, ops;
         menu = new JMenuBar();
         menu.add(  file = new JMenu( "File" ) );
-        file.add(alwaysOnTop = new JCheckBoxMenuItem( toggleAlwaysOnTop ));
+        file.add(alwaysOnTop = new JCheckBoxMenuItem( 
+                toggleAlwaysOnTop ));
         file.addSeparator();
         file.add( new JMenuItem( quitAction ) );
         menu.add( menuSelect = new JMenu( "Tasks" ) );
         menu.add( ops = new JMenu( "Ops..." ) );
-        ops.add( new JMenuItem( addAction ) );
+        ops.add( new JMenuItem( addNewTask ) );
         ops.add( new JMenuItem( resetSelected ) );
+        ops.add( new JMenuItem( deleteSelected) );
         ops.add( menuDelete = new JMenu( "Delete task" ) );
         menu.add( totalTime = new JLabel( "TOTAL" ) );
         setJMenuBar( menu );
-        add( new JScrollPane( list = new JList<Task>(listModel) ) );
+        add( new JScrollPane( list = 
+                new JList<Task>(listModel) ) );
         addWindowListener( this );
-        load();
+        load( ts );
     }
     
-    public void load() {
+    public void load(long ts) {
         Properties props = new Properties();
         try {
-            props.load( new BufferedInputStream( new FileInputStream( f ) ));
+            props.load( new BufferedInputStream( 
+                    new FileInputStream( f ) ));
         } catch (FileNotFoundException e) {
             // nothing, file doesn't exist.
-            System.err.println(f + " does not exist, will be written on exit.");
+            System.err.println(f + 
+                    " does not exist, will be written on exit.");
         } catch (Exception e) {
             System.err.println("File: " + f + ": " + e);
             System.exit( 1 );
         }
-        int tn = Integer.parseInt( props.getProperty( "tasks.num", "0" ));
+        int tn = Integer.parseInt( props.getProperty( 
+                "tasks.num", "0" ));
         for (int i = 0; i < tn; i++) {
-            String name = props.getProperty( nameString(i), "task#" + i );
+            String name = props.getProperty( 
+                    nameString(i), "task#" + i );
             String val = props.getProperty( valueString( i ) );
             if (val == null) {
-                newTask(name);
+                newTask(name, ts);
             } else {
-                newTask(name, Long.parseLong( val ));
+                newTask(name, ts, Long.parseLong( val ));
             }
         }
     }
@@ -327,29 +396,34 @@ public class TimeManager extends JFrame implements WindowListener {
     public void save() {
         Properties props = new Properties();
         int i = 0;
-        for (Task t: tasks.values()) {
+        for (Task t: tasksMap.values()) {
             props.setProperty( nameString( i ), t.getName() );
-            props.setProperty( valueString( i ), new Long(t.getValue()).toString() );
+            props.setProperty( valueString( i ), 
+                    new Long(t.getValue()).toString() );
             i++;
         }
         props.setProperty( "tasks.num", new Integer(i).toString());
         try {
-            props.store( new BufferedOutputStream( new FileOutputStream( f ) ), version );
+            props.store( 
+                new BufferedOutputStream( 
+                    new FileOutputStream( f ) ), 
+                version );
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-
     public static void main(String[] args) {
-        TimeManager tm = new TimeManager( version );
+
+        long starttime = System.currentTimeMillis();
+        System.out.println( "" + starttime + 
+                BEGIN + new Date(starttime) );
+
+        TimeManager tm = new TimeManager( version, starttime );
 
         tm.setDefaultCloseOperation( EXIT_ON_CLOSE );
         tm.pack();
         tm.setVisible( true );
-        long starttime = System.currentTimeMillis();
-        
-        System.out.println( "" + starttime + ": BEGIN " + new Date(starttime) );
         
         try {
             while (true) {
@@ -357,13 +431,15 @@ public class TimeManager extends JFrame implements WindowListener {
                 tm.update();
             }
         } catch( InterruptedException e ) {
-            System.out.println( "main method interrupted, finishing: " + e);
+            System.out.println( 
+                    "main method interrupted, finishing: " + e);
             tm.quitAction.actionPerformed( 
-                    new ActionEvent(null, 
-                                    ActionEvent.ACTION_PERFORMED, 
-                                    "main interrupted",
-                                    System.currentTimeMillis(), 
-                                    0) );
+                    new ActionEvent(
+                            null, 
+                            ActionEvent.ACTION_PERFORMED, 
+                            "main interrupted",
+                            System.currentTimeMillis(), 
+                            0) );
         }
         
     }
@@ -375,8 +451,7 @@ public class TimeManager extends JFrame implements WindowListener {
 
     @Override
     public void windowClosing( WindowEvent e ) {
-        quitAction.actionPerformed( 
-                    new ActionEvent(this, 
+        quitAction.actionPerformed( new ActionEvent(this, 
                                     ActionEvent.ACTION_PERFORMED, 
                                     "window Close",
                                     System.currentTimeMillis(),
