@@ -37,9 +37,8 @@ import javax.swing.JScrollPane;
 
 public class TimeManager extends JFrame implements WindowListener {
 
-    private static final String version = "TimeManager v1.0";
+    private static final String version = "TimeManager v1.1";
     private static final long serialVersionUID = -4888907548573283461L;
-    private static final long DIVIDER = 3600;  // to get resolution of 0.001h
     private static final File f = new File(System.getProperty( "user.home" ), ".timemanager");
 
     Task                    updatingTask;
@@ -236,8 +235,7 @@ public class TimeManager extends JFrame implements WindowListener {
         
         @Override
         public String toString() {
-            long val = getValue() / DIVIDER;
-            return String.format("%d.%03d: %s", val / 1000, val % 1000, name);
+            return String.format("[%s]:%s", TimeUnits.msecToString(getValue()), name);
         }
     }
 
@@ -265,8 +263,8 @@ public class TimeManager extends JFrame implements WindowListener {
                 total += listModel.getElementAt( i ).getValue();
             }
         }
-        total /= DIVIDER;
-        totalTime.setText( String.format( "TOTAL: %d.%03d", total / 1000, total % 1000 ) );
+        totalTime.setText( String.format( "TOTAL: %s", TimeUnits.msecToString( total ) ) );
+        setTitle( version + " - " + TimeUnits.msecToString( total ) );
     }
 
     public TimeManager( String title ) {
