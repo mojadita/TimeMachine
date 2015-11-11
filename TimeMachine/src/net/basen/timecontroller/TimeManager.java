@@ -53,16 +53,16 @@ public class TimeManager extends JFrame implements WindowListener {
     private static final String DELETE  = ": DELETE ";
     private static final String BEGIN   = ": BEGIN  ";
 
-    Task                    updatingTask;
-    Map<String, Task>       tasksMap = 
+    private Task                    updatingTask;
+    private Map<String, Task>       tasksMap = 
             new TreeMap<String, Task>();
-    JMenu                   menuSelect;
-    JMenu                   menuDelete;
-    JList<Task>             list;
-    TaskListModel           listModel = 
+    private JMenu                   menuSelect;
+    private JMenu                   menuDelete;
+    private JList<Task>             list;
+    private TaskListModel           listModel = 
             new TaskListModel();
-    JLabel                  totalTime;
-    JCheckBoxMenuItem       alwaysOnTop;
+    private JLabel                  totalTime;
+    private JCheckBoxMenuItem       alwaysOnTop;
     
     /*******************************************************************
      * NOW, THE ACTIONS:
@@ -134,7 +134,8 @@ public class TimeManager extends JFrame implements WindowListener {
                         if (updatingTask == t) 
                             t.stop(e.getWhen());
                         t.delete(e.getWhen());
-                        i--;
+                        i--; // so we get to the right index
+                             // in the next iteration.
                     }
                 }
             }
@@ -161,6 +162,9 @@ public class TimeManager extends JFrame implements WindowListener {
         }
     };
 
+    /****************************************************************
+     * SUBCLASSES:
+     */
     private class TaskListModel extends AbstractListModel<Task> {
         
         private static final long serialVersionUID = 
