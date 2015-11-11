@@ -64,7 +64,7 @@ public class TimeManager extends JFrame implements WindowListener {
     private JLabel                  totalTime;
     private JCheckBoxMenuItem       alwaysOnTop;
     
-    /*******************************************************************
+    /* ******************************************************************
      * NOW, THE ACTIONS:
      */
     private final Action toggleAlwaysOnTop = 
@@ -162,7 +162,7 @@ public class TimeManager extends JFrame implements WindowListener {
         }
     };
 
-    /****************************************************************
+    /* ***************************************************************
      * SUBCLASSES:
      */
     private class TaskListModel extends AbstractListModel<Task> {
@@ -362,6 +362,14 @@ public class TimeManager extends JFrame implements WindowListener {
         load( ts );
     }
     
+    private String nameString(int i) {
+        return "task." + i + ".name";
+    }
+    
+    private String valueString(int i) {
+        return "task." + i + ".value";
+    }
+    
     public void load(long ts) {
         Properties props = new Properties();
         try {
@@ -387,14 +395,6 @@ public class TimeManager extends JFrame implements WindowListener {
                 newTask(name, ts, Long.parseLong( val ));
             }
         }
-    }
-    
-    private String nameString(int i) {
-        return "task." + i + ".name";
-    }
-    
-    private String valueString(int i) {
-        return "task." + i + ".value";
     }
     
     public void save() {
@@ -448,6 +448,10 @@ public class TimeManager extends JFrame implements WindowListener {
         
     }
 
+    /* ************************************************************
+     * WINDOW OPERATIONS:
+     */
+    
     @Override
     public void windowOpened( WindowEvent e ) {
         // empty
