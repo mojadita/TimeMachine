@@ -40,7 +40,7 @@ public class TimeManager extends JFrame implements WindowListener {
 
     private static final long   serialVersionUID = 
             -4888907548573283461L;
-    private static final String version = "TimeManager v1.3";
+    private static final String version = "TimeManager v1.4";
     private static final File   f = new File(
             System.getProperty( "user.home" ), 
             ".timemanager.properties");
@@ -161,6 +161,17 @@ public class TimeManager extends JFrame implements WindowListener {
             System.exit(0);
         }
     };
+    
+    private final Action stopAction =
+            new AbstractAction("Stop") {
+        { setEnabled( false ); }            
+                @Override
+                public void actionPerformed( ActionEvent e ) {
+                    if (updatingTask != null) {
+                        updatingTask.stop( e.getWhen() );
+                    }
+                }
+            };
 
     /* ***************************************************************
      * SUBCLASSES:
@@ -256,6 +267,7 @@ public class TimeManager extends JFrame implements WindowListener {
                 updatingTask = this;
                 select.setEnabled( false );
                 updatingTask.lapFrom = ts;
+                stopAction.setEnabled( true );
                 listModel.update( this );
                 System.out.println( "" + ts + START + this );
             }
@@ -268,6 +280,7 @@ public class TimeManager extends JFrame implements WindowListener {
                 updatingTask.select.setEnabled( true );
                 listModel.update( this );
                 updatingTask = null;
+                stopAction.setEnabled( false );
             }
         }
         
@@ -349,6 +362,8 @@ public class TimeManager extends JFrame implements WindowListener {
         file.addSeparator();
         file.add( new JMenuItem( quitAction ) );
         menu.add( menuSelect = new JMenu( "Tasks" ) );
+        menuSelect.add( stopAction );
+        menuSelect.addSeparator();
         menu.add( ops = new JMenu( "Ops..." ) );
         ops.add( new JMenuItem( addNewTask ) );
         ops.add( new JMenuItem( resetSelected ) );
