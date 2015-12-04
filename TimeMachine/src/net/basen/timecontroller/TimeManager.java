@@ -189,17 +189,17 @@ public class TimeManager
                                                                           t.stop(e.getWhen());
                                                                       t.delete(e
                                                                               .getWhen());
-                                                                      i--;                                                            // so
-                                                                                                                                      // we
-                                                                                                                                      // get
-                                                                                                                                      // to
-                                                                                                                                      // the
-                                                                                                                                      // right
-                                                                                                                                      // index
-                                                                                                                                      // in
-                                                                                                                                      // the
-                                                                                                                                      // next
-                                                                                                                                      // iteration.
+                                                                      i--;                                                                         // so
+                                                                                                                                                   // we
+                                                                                                                                                   // get
+                                                                                                                                                   // to
+                                                                                                                                                   // the
+                                                                                                                                                   // right
+                                                                                                                                                   // index
+                                                                                                                                                   // in
+                                                                                                                                                   // the
+                                                                                                                                                   // next
+                                                                                                                                                   // iteration.
                                                                   }
                                                               }
                                                           }
@@ -238,6 +238,8 @@ public class TimeManager
                                                   };
                                                   
     private final Action        stopAction        = new AbstractAction("Stop") {
+                                                      
+                                                      private static final long serialVersionUID = -4605298344933918339L;
                                                       
                                                       {
                                                           setEnabled(false);
