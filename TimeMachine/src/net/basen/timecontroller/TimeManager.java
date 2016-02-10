@@ -188,20 +188,6 @@ public class TimeManager
 
                                                           @Override
                                                           public void actionPerformed( ActionEvent e ) {
-                                                              if( updatingTask != null ) {
-                                                                  updatingTask.stop( e.getWhen() );
-                                                              }
-                                                              for( Task n: tasksMap.values() ) {
-                                                                  System.out.println( ""
-                                                                      + e.getWhen()
-                                                                      + TOTAL
-                                                                      + n );
-                                                              }
-                                                              save();
-                                                              System.out.println( ""
-                                                                  + e.getWhen()
-                                                                  + END
-                                                                  + new Date( e.getWhen() ) );
                                                               System.exit( 0 );
                                                           }
                                                       };
@@ -599,7 +585,25 @@ public class TimeManager
             e.printStackTrace();
         }
     }
+    
+    public void finish(long timeMillis) {
+        if( updatingTask != null ) {
+            updatingTask.stop( timeMillis );
+        }
+        for( Task n: tasksMap.values() ) {
+            System.out.println( ""
+                + timeMillis
+                + TOTAL
+                + n );
+        }
+        save();
+        System.out.println( ""
+                + timeMillis
+                + END
+                + new Date( ) );
+    }
 
+    static TimeManager tm = new TimeManager( version, System.currentTimeMillis());
     /**
      * Main entry point to the program.
      * 
@@ -611,11 +615,18 @@ public class TimeManager
         long starttime = System.currentTimeMillis();
         System.out.println( "" + starttime + BEGIN + new Date( starttime ) );
 
-        TimeManager tm = new TimeManager( version, starttime );
-
         tm.setDefaultCloseOperation( EXIT_ON_CLOSE );
         tm.pack();
         tm.setVisible( true );
+
+        Runtime.getRuntime().addShutdownHook( new Thread( new Runnable() {
+            
+            @Override
+            public void run() {
+                tm.finish( System.currentTimeMillis() );
+            }
+        }) );
+
 
         try {
             while( true ) {
@@ -624,13 +635,7 @@ public class TimeManager
             }
         } catch( InterruptedException e ) {
             System.out.println( "main method interrupted, finishing: " + e );
-            tm.quitAction.actionPerformed( new ActionEvent( null,
-                                                            ActionEvent.ACTION_PERFORMED,
-                                                            "main interrupted",
-                                                            System.currentTimeMillis(),
-                                                            0 ) );
         }
-
     }
 
     /*
