@@ -12,39 +12,40 @@ package net.basen.timecontroller;
  *
  */
 public enum TimeUnits {
-    //U_MSEC(1, "ms", "millisecond", "milliseconds"),
-    U_SEC(1000, "s", "second", "seconds"),
-    U_MIN(60*1000, "m", "minute", "minutes"),
-    U_HOUR(60*60*1000, "h", "hour", "hours"),
-    U_WDAY(15*30*60*1000, "wd", "workday", "workdays"),
-    U_DAY(24*60*60*1000, "d", "day", "days"),
-    ;
-    
-    long    val;
-    String  abbrevName, 
-            longName, 
-            longNamePlural;
-    public static final TimeUnits[] arrayUnits = new TimeUnits[] {
-        /* U_MSEC,*/ U_SEC, U_MIN, U_HOUR, U_WDAY,
-    };
+    U_MSEC( 1, "ms", "millisecond", "milliseconds" ),
+    U_SEC( 1000, "s", "second", "seconds" ),
+    U_MIN( 60 * U_SEC.val, "m", "minute", "minutes" ),
+    U_HOUR( 60 * U_MIN.val, "h", "hour", "hours" ),
+    U_WDAY( 8 * U_HOUR.val, "wd", "workday", "workdays" ),
+    U_DAY( 24 * U_HOUR.val, "d", "day", "days" ), ;
+
+    public final long val;
+
+    public final String abbrevName, longName, longNamePlural;
+
+    public static final TimeUnits[] arrayUnits = new TimeUnits[] { U_MSEC,
+        U_SEC, U_MIN, U_HOUR, U_WDAY, };
+
     private static final long eps = arrayUnits[0].val / 2;
-    
-    TimeUnits(long val, String abbrevName, String longName, String longNamePlural) {
-        this.val            = val; 
-        this.abbrevName     = abbrevName; 
-        this.longName       = longName; 
+
+    TimeUnits( long val, String abbrevName, String longName,
+            String longNamePlural ) {
+        this.val = val;
+        this.abbrevName = abbrevName;
+        this.longName = longName;
         this.longNamePlural = longNamePlural;
     }
-    
-    public static String msecToString(long value) {
+
+    public static String msecToString( long value ) {
         StringBuffer res = new StringBuffer();
         String sep = "";
-        if (value < eps) return "0" + arrayUnits[0].abbrevName;
+        if( value < eps )
+            return "0" + arrayUnits[0].abbrevName;
         value += eps;
-        for (int i = arrayUnits.length-1; i >= 0; i--) {
+        for( int i = arrayUnits.length - 1; i >= 0; i-- ) {
             long integral = value / arrayUnits[i].val;
-                    value = value % arrayUnits[i].val;
-            if (integral != 0) {
+            value = value % arrayUnits[i].val;
+            if( integral != 0 ) {
                 res.append( sep + integral + arrayUnits[i].abbrevName );
                 sep = " ";
             }
